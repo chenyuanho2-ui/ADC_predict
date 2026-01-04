@@ -645,6 +645,16 @@
               <FileType>1</FileType>
               <FilePath>..\miku666\Src\Calc_Median.c</FilePath>
             </File>
+            <File>
+              <FileName>line.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\miku666\Src\line.c</FilePath>
+            </File>
+            <File>
+              <FileName>line.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\miku666\Inc\line.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -36,6 +36,4 @@ adc\main.o: ../Core/Inc/gpio.h
 adc\main.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdio.h
 adc\main.o: D:\keil5\ARM\ARMCC\Bin\..\include\inttypes.h
 adc\main.o: ..\miku666\Inc\button.h
-adc\main.o: ..\miku666\Inc\Calc_Sliding_Average.h
-adc\main.o: ..\miku666\Inc\Calc_Median.h
-adc\main.o: ..\miku666\Inc\line_low.h
+adc\main.o: ..\miku666\Inc\line.h
