@@ -1,7 +1,7 @@
 #include "button.h"
 
 // 定义消抖时间 (ms)
-#define DEBOUNCE_DELAY 50  // 50ms通常够用了，250ms稍微有点长，你可以根据手感调整
+#define DEBOUNCE_DELAY 500  // 50ms通常够用了，250ms稍微有点长，你可以根据手感调整
 
 // 内部静态变量，用于记录状态，static确保它们在函数退出后数值还在
 static uint32_t last_time_btn1 = 0;

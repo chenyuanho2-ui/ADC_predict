@@ -6,8 +6,9 @@
 
 // --- 参数配置 ---
 // 卡尔曼参数 (Q=0.01, R=0.5 是初始推荐值，可根据 PID 扰动实测调整 R 到 1.0~5.0)
+//Q代表系统状态变化的频率,R代表测量仪器的精度（即传感器的噪声）
 #define KALMAN_Q            0.01f  
-#define KALMAN_R            0.5f   
+#define KALMAN_R            5.0f   
 
 // 业务参数 (保持与 line.c 一致)
 #define PARAM_K             0.4f

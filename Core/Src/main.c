@@ -136,6 +136,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  
 // ============================================================
 	while (HAL_GetTick() < target_tick) {
         // 在等待期间持续扫描按键，响应更快

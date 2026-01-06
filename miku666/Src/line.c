@@ -8,7 +8,7 @@
 //L1为下线，L2为上线
 // --- 參數配置 ---
 #define SAMPLE_INTERVAL_MS  50    // 採樣間隔
-#define PARAM_K             0.7f  // 系數 K，突变0.4，连续0.7
+#define PARAM_K             0.4f  // 系數 K，突变0.4，连续0.7
 #define L2_LEARN_COUNT      20    // 學習 L2 需要的樣本數
 #define LEN_MED_BUF         10    // 0.5s 中值濾波
 #define LEN_AVG_BUF         40    // 2.0s 滑動平均
