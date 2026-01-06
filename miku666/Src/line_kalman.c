@@ -4,9 +4,9 @@
 #include <stdio.h>
 
 // --- 参数配置 ---
-// 卡尔曼参数
-#define KALMAN_Q            0.01f  // 过程噪声 (根据之前分析推荐)
-#define KALMAN_R            0.5f   // 测量噪声 (抵抗PID突起)
+// 卡尔曼参数 (Q=0.01, R=0.5 是初始推荐值，可根据 PID 扰动实测调整 R 到 1.0~5.0)
+#define KALMAN_Q            0.01f  
+#define KALMAN_R            0.5f   
 
 // 业务参数 (保持与 line.c 一致)
 #define PARAM_K             0.4f
@@ -21,7 +21,7 @@ static uint32_t w_confirm_ms = 500;
 
 // 卡尔曼滤波器实例
 static Kalman_t kf_inst;
-static uint8_t kf_initialized = 0; // 标记滤波器是否已重置
+static uint8_t kf_initialized = 0; 
 
 // L2 及预测相关
 static float L2_temp_max = 0.0f;
@@ -55,8 +55,9 @@ void Line_Kalman_Stop(void) {
 void Line_Kalman_Start_L1_Test(void) {
     l1_collect_cnt = 0;
     l1_temp_min = 99999.0f;
-    kf_initialized = 0; // 重新初始化滤波器
+    kf_initialized = 0; 
     current_state = LINE_TEST_L1;
+    // 不打印单独的开始提示，保持静默
 }
 
 void Line_Kalman_Start_Work_Predict(void) {
@@ -67,7 +68,7 @@ void Line_Kalman_Start_Work_Predict(void) {
     L2_sample_cnt = 0;
     L2_temp_max = 0.0f;
     is_success_counting = 0;
-    kf_initialized = 0; // 重新初始化滤波器，避免上一段数据的拖尾
+    kf_initialized = 0; 
     predict_start_tick = HAL_GetTick();
     current_state = LINE_WORK_PREDICT;
 }
@@ -80,11 +81,10 @@ uint8_t Line_Kalman_Process(uint32_t raw_adc) {
     float P = 0.0f;
 
     // 1. 卡尔曼滤波处理
-    // 如果是该状态下的第一个点，初始化滤波器
     if (!kf_initialized) {
         Kalman_Init(&kf_inst, KALMAN_Q, KALMAN_R, raw_f);
         kf_initialized = 1;
-        P = raw_f; // 第一个点直接作为估计值
+        P = raw_f; 
     } else {
         P = Kalman_Update(&kf_inst, raw_f);
     }
@@ -97,14 +97,17 @@ uint8_t Line_Kalman_Process(uint32_t raw_adc) {
         l1_collect_cnt++;
 
         if (l1_collect_cnt % 20 == 0) {
-            printf("[%u] [Kalman] L1 Collecting (%d/%d)... P:%.2f\r\n", 
-                   current_time, l1_collect_cnt, L1_COLLECT_TOTAL, P);
+            // 修正：Raw:%u
+            printf("[%u] [Kalman] L1 Collecting (%d/%d)... P:%.2f, Raw:%u\r\n", 
+                   current_time, l1_collect_cnt, L1_COLLECT_TOTAL, P, raw_adc);
         }
 
         if (l1_collect_cnt >= L1_COLLECT_TOTAL) {
             L1_val = l1_temp_min;
             has_L1 = 1;
-            printf("--- L1 DONE (Min:%.2f) --- [Kalman] L1 Fixed.\r\n", L1_val);
+            // 修正：Raw:%u
+            printf("--- L1 SET DONE (Min:%.2f) --- [%u] [Kalman] L1 Finalizing... P:%.2f, Raw:%u\r\n", 
+                   L1_val, current_time, P, raw_adc);
             current_state = LINE_IDLE;
             return 1;
         }
@@ -123,9 +126,12 @@ uint8_t Line_Kalman_Process(uint32_t raw_adc) {
             if (L2_sample_cnt >= L2_LEARN_COUNT) {
                 final_L2 = L2_temp_max;
                 alpha_threshold = PARAM_K * (final_L2 - L1_val) / (final_L2 + 0.001f);
-                printf("--- L2 SETTLED (%.2f) --- [Kalman] alpha:%.4f\r\n", final_L2, alpha_threshold);
+                // 修正：Raw:%u
+                printf("--- L2 SETTLED (L2:%.2f a:%.4f) --- [%u] [Kalman] Learning L2... P:%.2f, Raw:%u\r\n", 
+                       final_L2, alpha_threshold, rel_time, P, raw_adc);
             } else {
-                printf("[%u] [Kalman] Learning L2... P:%.2f\r\n", rel_time, P);
+                // 修正：Raw:%u
+                printf("[%u] [Kalman] Learning L2... P:%.2f, Raw:%u\r\n", rel_time, P, raw_adc);
             }
             return 0;
         }
@@ -134,7 +140,8 @@ uint8_t Line_Kalman_Process(uint32_t raw_adc) {
         float beta = (final_L2 - P) / (final_L2 + 0.001f);
 
         if (current_state == LINE_WORK_SUCCESS) {
-            printf("[%u] [Kalman] P:%.2f, beta:%.4f [SUCCESS]\r\n", rel_time, P, beta);
+            // 修正：Raw:%u
+            printf("[%u] [Kalman] P:%.2f, beta:%.4f, [SUCCESS], Raw:%u\r\n", rel_time, P, beta, raw_adc);
         } else {
             // 判定逻辑
             if (beta > (alpha_threshold / 2.0f)) {
@@ -144,15 +151,19 @@ uint8_t Line_Kalman_Process(uint32_t raw_adc) {
                 }
                 
                 if ((current_time - success_start_tick) >= w_confirm_ms) {
-                    printf("--- WORK SUCCESS --- [%u] [Kalman] P:%.2f, beta:%.4f\r\n", rel_time, P, beta);
+                    // 修正：Raw:%u
+                    printf("--- WORK SUCCESS --- [%u] [Kalman] P:%.2f, beta:%.4f, [SUCCESS], Raw:%u\r\n", 
+                           rel_time, P, beta, raw_adc);
                     current_state = LINE_WORK_SUCCESS;
                     return 1;
                 } else {
-                    printf("[%u] [Kalman] P:%.2f, beta:%.4f Pending...\r\n", rel_time, P, beta);
+                    // 修正：Raw:%u
+                    printf("[%u] [Kalman] P:%.2f, beta:%.4f, Pending..., Raw:%u\r\n", rel_time, P, beta, raw_adc);
                 }
             } else {
                 is_success_counting = 0;
-                printf("[%u] [Kalman] P:%.2f, beta:%.4f Not Ready\r\n", rel_time, P, beta);
+                // 修正：Raw:%u
+                printf("[%u] [Kalman] P:%.2f, beta:%.4f, Not Ready, Raw:%u\r\n", rel_time, P, beta, raw_adc);
             }
         }
     }
