@@ -666,19 +666,9 @@
               <FilePath>..\miku666\Src\select.c</FilePath>
             </File>
             <File>
-              <FileName>cusum.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\miku666\Inc\cusum.h</FilePath>
-            </File>
-            <File>
               <FileName>cusum.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\miku666\Src\cusum.c</FilePath>
-            </File>
-            <File>
-              <FileName>line_cusum.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\miku666\Inc\line_cusum.h</FilePath>
             </File>
             <File>
               <FileName>line_cusum.c</FileName>

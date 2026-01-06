@@ -117,7 +117,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_ADC_Start(&hadc1);  
 	
-	// 初始化选择器 (默认是卡尔曼，也可以在这里 Select_SetAlgo(ALGO_SMA_BASELINE);)
+// 初始化选择器 
 	Select_Init();
 
    printf("symtem on...\r\n");

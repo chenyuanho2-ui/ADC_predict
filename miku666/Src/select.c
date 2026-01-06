@@ -4,8 +4,16 @@
 #include "line_cusum.h" // 新增
 #include <stdio.h>
 
-// 默认选择哪个？您可以根据需要修改这里
-static Algo_Type_t current_algo = ALGO_CUSUM_BASELINE; 
+/* * ============================================================
+ * 算法选择说明 (ALGO SELECTION GUIDE):
+ * ============================================================
+ * 如果需要更改系统默认运行的算法，请修改下方 current_algo 的赋值：
+ * * 1. ALGO_SMA_BASELINE   : 经典滑动平均法。适合处理随机高频毛刺，逻辑简单。
+ * 2. ALGO_KALMAN_BASELINE : 卡尔曼滤波法。响应速度最快，能平衡噪声与灵敏度。
+ * 3. ALGO_CUSUM_BASELINE  : 滤波累积和法。最稳健，适合处理 PID 带来的矩形突起干扰。
+ * ============================================================
+ */
+static Algo_Type_t current_algo = ALGO_SMA_BASELINE; 
 
 void Select_SetAlgo(Algo_Type_t algo) {
     current_algo = algo;
