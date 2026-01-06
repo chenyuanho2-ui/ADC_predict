@@ -127,89 +127,76 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  // 初始化“下一次采样目标时间”为当前时间
+  uint32_t target_tick = HAL_GetTick();
+  const uint32_t SAMPLE_PERIOD = 50; // 严格的 50ms 周期
+  
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 // ============================================================
-   // 1. 按键扫描与指令下发 (通过 Select 模块路由)
+	while (HAL_GetTick() < target_tick) {
+        // 在等待期间持续扫描按键，响应更快
+        uint8_t key = Button_Scan();
+        Line_State_t current_state = Select_GetState();
+
+        if (key == 1) { 
+            if (current_state == LINE_WORK_PREDICT || current_state == LINE_WORK_SUCCESS) {
+                Select_Stop(); 
+            } else if (current_state == LINE_IDLE) {
+                // 重置时间锚点，防止暂停期间 target_tick 落后太久导致瞬间连发
+                target_tick = HAL_GetTick(); 
+                Select_Start_Work_Predict();
+            }
+        }
+        else if (key == 2) {
+            if (current_state == LINE_IDLE || current_state == LINE_WORK_SUCCESS) {
+                target_tick = HAL_GetTick(); // 重置时间锚点
+                Select_Start_L1_Test();
+            }
+        }
+    }
+
     // ============================================================
-    uint8_t key = Button_Scan();
-    
-    // 获取当前状态 (Select 模块会自动判断是哪个算法的状态)
+    // 2. 到达时间点，执行核心任务
+    // ============================================================
+    // 锁定下一次的任务时间 (强制 +50，消除累积漂移)
+    target_tick += SAMPLE_PERIOD;
+
     Line_State_t current_state = Select_GetState();
 
-    if (key == 1) { // Button 1: 启动预测 / 停止
-        // 如果正在运行 (预测中 或 已成功)，再次按下 -> 停止
-        if (current_state == LINE_WORK_PREDICT || current_state == LINE_WORK_SUCCESS) {
-            Select_Stop(); 
-        }
-        // 如果是空闲状态 -> 启动预测 (自动沿用之前的 L1)
-        else if (current_state == LINE_IDLE) {
-            Select_Start_Work_Predict();
-        }
-        else {
-            // 正在测 L1 时的忙碌提示
-            // printf("[System] Busy (Measuring L1)!\r\n");
-        }
-    }
-    else if (key == 2) { // Button 2: 重新测试 L1 基准
-        // 允许在空闲或成功状态下重测 L1
-        if (current_state == LINE_IDLE || current_state == LINE_WORK_SUCCESS) {
-            Select_Start_L1_Test();
-        } else {
-            // printf("[System] Busy!\r\n");
-        }
-    }
-    // (可选) Button 3: 切换算法
-    // else if (key == 3) {
-    //     static int algo_idx = 0;
-    //     algo_idx = !algo_idx;
-    //     Select_SetAlgo(algo_idx ? ALGO_KALMAN_BASELINE : ALGO_SMA_BASELINE);
-    // }
-
-    // ============================================================
-    // 2. 核心状态机与 LED 控制逻辑
-    // ============================================================
-    // 再次更新状态，因为按键可能刚刚改变了它
-    current_state = Select_GetState(); 
-
+    // 只有在工作状态下才执行 ADC 采样和算法
     if (current_state == LINE_TEST_L1 || current_state == LINE_WORK_PREDICT || current_state == LINE_WORK_SUCCESS) 
     {
         // --- LED 控制 ---
         if (current_state == LINE_WORK_SUCCESS) {
-            // 成功状态：LED 闪烁 (约 100ms)
             static uint8_t blink_cnt = 0;
             blink_cnt++;
-            if (blink_cnt >= 2) { 
+            if (blink_cnt >= 2) { // 100ms 闪烁
                 LED0_TOGGLE;
                 blink_cnt = 0;
             }
         } else {
-            // 忙碌状态 (L1 测试或预测中)：LED 常亮
             LED0_ON; 
         }
 
         // --- ADC 采样与算法处理 ---
-        // 轮询 ADC (超时 100ms)
-        if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
+        // 此时已经是严格的 50ms 间隔点
+        HAL_ADC_Start(&hadc1); 
+        if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
             uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
-            
-            // 调用 Select 统一接口
-            // 它会根据设置自动调用 Line_Process (普通) 或 Line_Kalman_Process (卡尔曼)
-            // 所有的打印逻辑都在算法内部完成
             Select_Process(adc_val);
         }
-        
-        // 采样延时，保持约 50ms 的周期 (47ms delay + ADC conversion time)
-        HAL_Delay(47); 
     }
     else 
     {
-        // --- 空闲状态 ---
+        // 空闲状态：不需要严格对齐，让出 CPU 防止死循环过热（虽然 MCU 不怕热）
         LED0_OFF;
-        HAL_Delay(100); // 空闲时降低刷新率节能
+        HAL_Delay(10); // 稍微休眠一下
+        // 空闲时要不断把 target_tick 同步到当前，否则一旦启动会因为 target 滞后而疯狂补作业
+        target_tick = HAL_GetTick() + SAMPLE_PERIOD;
     }
   }
   /* USER CODE END 3 */

@@ -13,7 +13,7 @@
  * 3. ALGO_CUSUM_BASELINE  : 滤波累积和法。最稳健，适合处理 PID 带来的矩形突起干扰。
  * ============================================================
  */
-static Algo_Type_t current_algo = ALGO_SMA_BASELINE; 
+static Algo_Type_t current_algo =ALGO_CUSUM_BASELINE; 
 
 void Select_SetAlgo(Algo_Type_t algo) {
     current_algo = algo;
