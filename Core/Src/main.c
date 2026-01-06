@@ -29,6 +29,7 @@
 #include <inttypes.h>  
 #include "button.h"
 #include "line.h"
+#include "select.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -115,8 +116,9 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_ADC_Start(&hadc1);  
-			 
-	Line_Init(); // 初始化模块
+	
+	// 初始化选择器 (默认是卡尔曼，也可以在这里 Select_SetAlgo(ALGO_SMA_BASELINE);)
+	Select_Init();
 
    printf("symtem on...\r\n");
    
@@ -131,67 +133,83 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 // ============================================================
-    // 1. 按键扫描与指令下发
+   // 1. 按键扫描与指令下发 (通过 Select 模块路由)
     // ============================================================
     uint8_t key = Button_Scan();
-    Line_State_t current_state = Line_GetState();
+    
+    // 获取当前状态 (Select 模块会自动判断是哪个算法的状态)
+    Line_State_t current_state = Select_GetState();
 
-    if (key == 1) { // Button 1 -> 启动工作预测
-        // 只有在空闲或已经成功完成的状态下，才允许重新开始
-        if (current_state == LINE_IDLE || current_state == LINE_WORK_SUCCESS) {
-            Line_Start_Work_Predict();
-        } else {
-            printf("[System] Busy!\r\n");
+    if (key == 1) { // Button 1: 启动预测 / 停止
+        // 如果正在运行 (预测中 或 已成功)，再次按下 -> 停止
+        if (current_state == LINE_WORK_PREDICT || current_state == LINE_WORK_SUCCESS) {
+            Select_Stop(); 
+        }
+        // 如果是空闲状态 -> 启动预测 (自动沿用之前的 L1)
+        else if (current_state == LINE_IDLE) {
+            Select_Start_Work_Predict();
+        }
+        else {
+            // 正在测 L1 时的忙碌提示
+            // printf("[System] Busy (Measuring L1)!\r\n");
         }
     }
-    else if (key == 2) { // Button 2 -> 启动 L1 基准测试
+    else if (key == 2) { // Button 2: 重新测试 L1 基准
+        // 允许在空闲或成功状态下重测 L1
         if (current_state == LINE_IDLE || current_state == LINE_WORK_SUCCESS) {
-            Line_Start_L1_Test();
+            Select_Start_L1_Test();
         } else {
-            printf("[System] Busy!\r\n");
+            // printf("[System] Busy!\r\n");
         }
     }
+    // (可选) Button 3: 切换算法
+    // else if (key == 3) {
+    //     static int algo_idx = 0;
+    //     algo_idx = !algo_idx;
+    //     Select_SetAlgo(algo_idx ? ALGO_KALMAN_BASELINE : ALGO_SMA_BASELINE);
+    // }
 
     // ============================================================
     // 2. 核心状态机与 LED 控制逻辑
     // ============================================================
-    current_state = Line_GetState(); // 更新一下状态，因为刚才可能变了
+    // 再次更新状态，因为按键可能刚刚改变了它
+    current_state = Select_GetState(); 
 
-    // 场景 A: 正在忙碌 (测L1 或 预测工作中) -> LED 常亮
-    if (current_state == LINE_TEST_L1 || current_state == LINE_WORK_PREDICT) 
+    if (current_state == LINE_TEST_L1 || current_state == LINE_WORK_PREDICT || current_state == LINE_WORK_SUCCESS) 
     {
-        LED0_ON; 
+        // --- LED 控制 ---
+        if (current_state == LINE_WORK_SUCCESS) {
+            // 成功状态：LED 闪烁 (约 100ms)
+            static uint8_t blink_cnt = 0;
+            blink_cnt++;
+            if (blink_cnt >= 2) { 
+                LED0_TOGGLE;
+                blink_cnt = 0;
+            }
+        } else {
+            // 忙碌状态 (L1 测试或预测中)：LED 常亮
+            LED0_ON; 
+        }
 
-        // 执行 ADC 采样与处理
+        // --- ADC 采样与算法处理 ---
+        // 轮询 ADC (超时 100ms)
         if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
             uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
             
-            // 喂数据给核心算法
-            uint8_t finished = Line_Process(adc_val);
-            
-            if (finished) {
-                // 刚刚完成了任务
-                if (Line_GetState() == LINE_WORK_SUCCESS) {
-                    printf("--- WORK SUCCESS ---\r\n");
-                } else {
-                    // 如果是 L1 测试完成，会变回 IDLE
-                    printf("--- L1 SET DONE ---\r\n");
-                }
-            }
+            // 调用 Select 统一接口
+            // 它会根据设置自动调用 Line_Process (普通) 或 Line_Kalman_Process (卡尔曼)
+            // 所有的打印逻辑都在算法内部完成
+            Select_Process(adc_val);
         }
-        HAL_Delay(47); // 采样间隔 ~50ms
+        
+        // 采样延时，保持约 50ms 的周期 (47ms delay + ADC conversion time)
+        HAL_Delay(47); 
     }
-    // 场景 B: 预测成功 (工作完成) -> LED 闪烁 (100ms)
-    else if (current_state == LINE_WORK_SUCCESS) 
-    {
-        LED0_TOGGLE;     // 翻转电平
-        HAL_Delay(100);  // 100ms 延迟，实现闪烁效果
-    }
-    // 场景 C: 空闲状态 -> LED 熄灭
     else 
     {
+        // --- 空闲状态 ---
         LED0_OFF;
-        HAL_Delay(100);  // 空闲时跑慢点，省电
+        HAL_Delay(100); // 空闲时降低刷新率节能
     }
   }
   /* USER CODE END 3 */

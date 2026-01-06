@@ -651,9 +651,34 @@
               <FilePath>..\miku666\Src\line.c</FilePath>
             </File>
             <File>
-              <FileName>line.h</FileName>
+              <FileName>kalman.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\miku666\Inc\line.h</FilePath>
+              <FilePath>..\miku666\Inc\kalman.h</FilePath>
+            </File>
+            <File>
+              <FileName>kalman.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\miku666\Src\kalman.c</FilePath>
+            </File>
+            <File>
+              <FileName>line_kalman.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\miku666\Inc\line_kalman.h</FilePath>
+            </File>
+            <File>
+              <FileName>line_kalman.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\miku666\Src\line_kalman.c</FilePath>
+            </File>
+            <File>
+              <FileName>select.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\miku666\Inc\select.h</FilePath>
+            </File>
+            <File>
+              <FileName>select.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\miku666\Src\select.c</FilePath>
             </File>
           </Files>
         </Group>

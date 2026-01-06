@@ -21,6 +21,9 @@ Line_State_t Line_GetState(void);
 void Line_Start_L1_Test(void);
 void Line_Start_Work_Predict(void);
 
+// 停止命令 (新增)
+void Line_Stop(void);
+
 // 修改判定窗口时间 w (单位: ms)
 void Line_SetConfirmWindow(uint32_t w_ms);
 
