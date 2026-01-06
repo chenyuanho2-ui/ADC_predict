@@ -38,3 +38,5 @@ adc\main.o: D:\keil5\ARM\ARMCC\Bin\..\include\inttypes.h
 adc\main.o: ..\miku666\Inc\button.h
 adc\main.o: ..\miku666\Inc\line.h
 adc\main.o: ..\miku666\Inc\select.h
+adc\main.o: ..\miku666\Inc\line_kalman.h
+adc\main.o: ..\miku666\Inc\line_cusum.h

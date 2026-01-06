@@ -1,7 +1,7 @@
 adc\line_kalman.o: ..\miku666\Src\line_kalman.c
 adc\line_kalman.o: ..\miku666\Inc\line_kalman.h
-adc\line_kalman.o: ..\miku666\Inc\line.h
 adc\line_kalman.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdint.h
+adc\line_kalman.o: ..\miku666\Inc\line.h
 adc\line_kalman.o: ..\miku666\Inc\kalman.h
 adc\line_kalman.o: ../Core/Inc/main.h
 adc\line_kalman.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h

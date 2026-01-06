@@ -3,6 +3,7 @@
 #include "main.h"
 #include <stdio.h>
 
+
 // --- 参数配置 ---
 // 卡尔曼参数 (Q=0.01, R=0.5 是初始推荐值，可根据 PID 扰动实测调整 R 到 1.0~5.0)
 #define KALMAN_Q            0.01f  

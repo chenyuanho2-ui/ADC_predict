@@ -1,51 +1,58 @@
 #include "select.h"
-#include "line.h"        // 经典算法
-#include "line_kalman.h" // 卡尔曼算法
+#include "line.h"
+#include "line_kalman.h"
+#include "line_cusum.h" // 新增
 #include <stdio.h>
 
-// 默认使用卡尔曼
-static Algo_Type_t current_algo = ALGO_KALMAN_BASELINE;
+// 默认选择哪个？您可以根据需要修改这里
+static Algo_Type_t current_algo = ALGO_CUSUM_BASELINE; 
 
 void Select_SetAlgo(Algo_Type_t algo) {
     current_algo = algo;
-    // 切换算法时，最好重置一下状态
     if (current_algo == ALGO_SMA_BASELINE) {
-        printf("[Select] Switched to SMA Algorithm\r\n");
+        printf("[Select] Switched to SMA Baseline\r\n");
         Line_Init();
-    } else {
-        printf("[Select] Switched to Kalman Algorithm\r\n");
+    } else if (current_algo == ALGO_KALMAN_BASELINE) {
+        printf("[Select] Switched to Kalman Baseline\r\n");
         Line_Kalman_Init();
+    } else {
+        printf("[Select] Switched to Filtered CUSUM\r\n");
+        Line_Cusum_Init();
     }
 }
 
-// --- 路由实现 ---
-
 void Select_Init(void) {
     if (current_algo == ALGO_SMA_BASELINE) Line_Init();
-    else Line_Kalman_Init();
+    else if (current_algo == ALGO_KALMAN_BASELINE) Line_Kalman_Init();
+    else Line_Cusum_Init();
 }
 
 Line_State_t Select_GetState(void) {
     if (current_algo == ALGO_SMA_BASELINE) return Line_GetState();
-    else return Line_Kalman_GetState();
+    else if (current_algo == ALGO_KALMAN_BASELINE) return Line_Kalman_GetState();
+    else return Line_Cusum_GetState();
 }
 
 void Select_Start_L1_Test(void) {
     if (current_algo == ALGO_SMA_BASELINE) Line_Start_L1_Test();
-    else Line_Kalman_Start_L1_Test();
+    else if (current_algo == ALGO_KALMAN_BASELINE) Line_Kalman_Start_L1_Test();
+    else Line_Cusum_Start_L1_Test();
 }
 
 void Select_Start_Work_Predict(void) {
     if (current_algo == ALGO_SMA_BASELINE) Line_Start_Work_Predict();
-    else Line_Kalman_Start_Work_Predict();
+    else if (current_algo == ALGO_KALMAN_BASELINE) Line_Kalman_Start_Work_Predict();
+    else Line_Cusum_Start_Work_Predict();
 }
 
 void Select_Stop(void) {
-    if (current_algo == ALGO_SMA_BASELINE) Line_Stop(); // 需确保 line.h 中声明了 Line_Stop
-    else Line_Kalman_Stop();
+    if (current_algo == ALGO_SMA_BASELINE) Line_Stop();
+    else if (current_algo == ALGO_KALMAN_BASELINE) Line_Kalman_Stop();
+    else Line_Cusum_Stop();
 }
 
 uint8_t Select_Process(uint32_t raw_adc) {
     if (current_algo == ALGO_SMA_BASELINE) return Line_Process(raw_adc);
-    else return Line_Kalman_Process(raw_adc);
+    else if (current_algo == ALGO_KALMAN_BASELINE) return Line_Kalman_Process(raw_adc);
+    else return Line_Cusum_Process(raw_adc);
 }
