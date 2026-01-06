@@ -14,21 +14,21 @@
 
 // 滤波参数
 #define LEN_MED_BUF         10     // 0.5s 中值
-#define LEN_AVG_BUF         40     // 2.0s 滑动平均
+#define LEN_AVG_BUF         10     // 2.0s 滑动平均
 
 // --- CUSUM 自适应参数 (关键修改) ---
 // 不再使用固定的数值，而是使用"比例"
-// K_RATIO: 容忍度占量程的比例 (推荐 0.15 即 15%)
-// H_RATIO: 阈值占量程的比例 (推荐 0.8 ~ 1.0)
-#define CUSUM_K_RATIO       0.15f
+// K_RATIO: 容忍度占量程的比例 (推荐 0.15 即 15%),偏差K=K_RATIO*(L2-L1)
+// H_RATIO: 阈值占量程的比例 (推荐 0.8 ~ 1.0),阈值H=H_RATIO*(L2-L1)
+#define CUSUM_K_RATIO       0.2f
 #define CUSUM_H_RATIO       1.0f
-#define CUSUM_LAMBDA        0.98f  // 遗忘因子保持不变
+#define CUSUM_LAMBDA        0.95f  // 遗忘因子保持不变
 
 // --- 内部变量 ---
 static Line_State_t current_state = LINE_IDLE;
 static float L1_val = 0.0f;
 static uint8_t has_L1 = 0;
-static uint32_t w_confirm_ms = 500; 
+static uint32_t w_confirm_ms = 250; 
 
 // 滤波器缓冲区
 static float buf_med[LEN_MED_BUF];
