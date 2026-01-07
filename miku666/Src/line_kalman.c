@@ -7,6 +7,8 @@
 //Q代表系状态变化的频率,R代表测量仪器的精度（即传感器的噪声）
 #define KALMAN_Q            0.01f  
 #define KALMAN_R            20.0f  //注意.0不能去掉 
+// 默认 L1 值
+#define DEFAULT_L1_VAL      50.0f
 
 // 业务参数
 #define PARAM_K             0.4f
@@ -61,12 +63,14 @@ void Line_Kalman_Start_L1_Test(void) {
 }
 
 void Line_Kalman_Start_Work_Predict(void) {
+    // 【修改】不再报错返回，而是使用默认值警告
     if (!has_L1) {
-        printf("[Kalman] Error: L1 not set! Run Btn2 first.\r\n");
-        return;
+        L1_val = DEFAULT_L1_VAL;
+        printf("[Kalman] WARNING:Using Default: %.2f\r\n", L1_val);
     }
+
     L2_sample_cnt = 0;
-    L2_temp_max = 0.0f; 
+    L2_temp_max = 0.0f;
     is_success_counting = 0;
     kf_initialized = 0; 
     predict_start_tick = HAL_GetTick();

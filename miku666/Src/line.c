@@ -13,6 +13,9 @@
 #define LEN_MED_BUF         10    // 0.5s 中值濾波
 #define LEN_AVG_BUF         40    // 2.0s 滑動平均
 
+// 默认L1
+#define DEFAULT_L1_VAL      50.0f
+
 // L1 採樣參數 (10秒)
 #define L1_COLLECT_DURATION_MS 10000 
 #define L1_SAMPLES_TOTAL       (L1_COLLECT_DURATION_MS / SAMPLE_INTERVAL_MS)
@@ -98,11 +101,11 @@ void Line_Start_L1_Test(void) {
     current_state = LINE_TEST_L1;
 }
 
-// 開始預測 (刪除打印)
 void Line_Start_Work_Predict(void) {
     if (!has_L1) {
-        printf("[Line] Error: L1 not set! Press Btn2 first.\r\n");
-        return;
+        L1_val = DEFAULT_L1_VAL;
+        printf("[Line] WARNING: L1 not calibrated! Using Default: %.2f\r\n", L1_val);
+        // 删除 return
     }
     Reset_Buffers();
     L2_sample_cnt = 0; 

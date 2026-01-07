@@ -24,6 +24,9 @@
 #define CUSUM_H_RATIO       1.0f
 #define CUSUM_LAMBDA        0.95f  // 遗忘因子保持不变
 
+// 【新增】默认 L1 值 (根据您的实际情况修改，例如 200.0f)
+#define DEFAULT_L1_VAL      50.0f
+
 // --- 内部变量 ---
 static Line_State_t current_state = LINE_IDLE;
 static float L1_val = 0.0f;
@@ -99,10 +102,13 @@ void Line_Cusum_Start_L1_Test(void) {
 }
 
 void Line_Cusum_Start_Work_Predict(void) {
+    // 【修改】不再报错返回，而是使用默认值警告
     if (!has_L1) {
-        printf("[Cusum] Error: L1 not set!\r\n");
-        return;
+        L1_val = DEFAULT_L1_VAL;
+        printf("[Cusum] WARNING:Using Default: %.2f\r\n", L1_val);
+        // 注意：这里删除了 return，程序会继续往下跑
     }
+    
     Reset_Buffers();
     L2_sample_cnt = 0; 
     L2_temp_max = 0.0f; 
@@ -113,6 +119,7 @@ void Line_Cusum_Start_Work_Predict(void) {
     predict_start_tick = HAL_GetTick();
     current_state = LINE_WORK_PREDICT;
 }
+
 
 uint8_t Line_Cusum_Process(uint32_t raw_adc) {
     if (current_state == LINE_IDLE) return 0;
