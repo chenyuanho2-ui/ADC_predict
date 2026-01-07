@@ -14,7 +14,7 @@
 
 // 滤波参数
 #define LEN_MED_BUF         10     // 0.5s 中值
-#define LEN_AVG_BUF         10     // 2.0s 滑动平均
+#define LEN_AVG_BUF         10     // 1.0s 滑动平均
 
 // --- CUSUM 自适应参数 (关键修改) ---
 // 不再使用固定的数值，而是使用"比例"

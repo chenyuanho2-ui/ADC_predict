@@ -26,7 +26,6 @@
 "adc\calc_sliding_average.o"
 "adc\button.o"
 "adc\retarget.o"
-"adc\line_low.o"
 "adc\calc_median.o"
 "adc\line.o"
 "adc\kalman.o"

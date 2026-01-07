@@ -6,7 +6,7 @@
 // 卡尔曼参数 (Q=0.01, R=0.5 是初始推荐值，可根据 PID 扰动实测调整 R 到 1.0~5.0)
 //Q代表系状态变化的频率,R代表测量仪器的精度（即传感器的噪声）
 #define KALMAN_Q            0.01f  
-#define KALMAN_R            1.0f  //注意.0不能去掉 
+#define KALMAN_R            20.0f  //注意.0不能去掉 
 
 // 业务参数
 #define PARAM_K             0.4f
@@ -18,7 +18,7 @@
 static Line_State_t current_state = LINE_IDLE;
 static float L1_val = 0.0f;
 static uint8_t has_L1 = 0;
-static uint32_t w_confirm_ms = 500;
+static uint32_t w_confirm_ms = 500;//500ms
 
 // 卡尔曼滤波器实例
 static Kalman_t kf_inst;
